@@ -1,0 +1,353 @@
+// Realtor Host — client collaboration platform
+// https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum MembershipRole {
+  OWNER
+  ADMIN
+  MANAGER
+  AGENT
+  VIEWER
+  CLIENT
+}
+
+enum ClientType {
+  BUYER
+  SELLER
+  BOTH
+}
+
+enum ClientStatus {
+  PROSPECT
+  ACTIVE
+  UNDER_CONTRACT
+  CLOSED
+  INACTIVE
+}
+
+enum PortalStatus {
+  NOT_INVITED
+  INVITED
+  ACTIVE
+}
+
+enum AddedByRole {
+  REALTOR
+  CLIENT
+}
+
+enum RatingCategory {
+  OVERALL
+  KITCHEN
+  LAYOUT
+  NEIGHBORHOOD
+  SCHOOLS
+  COMMUTE
+  YARD
+}
+
+enum ListingStatus {
+  DRAFT
+  ACTIVE
+  PENDING
+  SOLD
+  OFF_MARKET
+}
+
+enum TransactionStage {
+  LEAD
+  SHOWING
+  OFFER
+  UNDER_CONTRACT
+  CLOSED
+  LOST
+}
+
+enum TaskType {
+  CALL
+  EMAIL
+  SHOWING
+  FOLLOW_UP
+  PAPERWORK
+  OTHER
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  CANCELED
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  CONVERTED
+  LOST
+}
+
+// ─── Tenancy ─────────────────────────────────────────────────────────────────
+
+model User {
+  id         String   @id @default(cuid())
+  supabaseId String   @unique @map("supabase_id")
+  email      String   @unique
+  firstName  String?  @map("first_name")
+  lastName   String?  @map("last_name")
+  avatarUrl  String?  @map("avatar_url")
+  phone      String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  memberships    Membership[]
+  clients        Client[]       @relation("RealtorClients")
+  homesAdded     Home[]         @relation("HomeAddedBy")
+  homeNotes      HomeNote[]
+  homeRatings    HomeRating[]
+  homeFavorites  HomeFavorite[]
+  tasks          Task[]         @relation("TaskAssignee")
+  transactions   Transaction[]  @relation("TransactionOwner")
+
+  @@map("users")
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  logoUrl   String?  @map("logo_url")
+  timezone  String   @default("America/New_York")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  memberships  Membership[]
+  clients      Client[]
+  homes        Home[]
+  listings     Listing[]
+  transactions Transaction[]
+  tasks        Task[]
+  leads        Lead[]
+
+  @@map("organizations")
+}
+
+model Membership {
+  id             String         @id @default(cuid())
+  organizationId String         @map("organization_id")
+  userId         String         @map("user_id")
+  role           MembershipRole @default(AGENT)
+  isActive       Boolean        @default(true) @map("is_active")
+  joinedAt       DateTime       @default(now()) @map("joined_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@map("memberships")
+}
+
+// ─── Clients (core module) ───────────────────────────────────────────────────
+
+model Client {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  realtorId      String       @map("realtor_id")
+  portalUserId   String?      @unique @map("portal_user_id")
+  firstName      String       @map("first_name")
+  lastName       String       @map("last_name")
+  email          String?
+  phone          String?
+  clientType     ClientType   @default(BUYER) @map("client_type")
+  status         ClientStatus @default(PROSPECT)
+  portalStatus   PortalStatus @default(NOT_INVITED) @map("portal_status")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  realtor      User          @relation("RealtorClients", fields: [realtorId], references: [id])
+  homes        Home[]
+  tasks        Task[]
+  transactions Transaction[]
+
+  @@index([organizationId])
+  @@index([realtorId])
+  @@map("clients")
+}
+
+// ─── Buyer Home Workspace ────────────────────────────────────────────────────
+
+model Home {
+  id             String      @id @default(cuid())
+  organizationId String      @map("organization_id")
+  clientId       String      @map("client_id")
+  addedById      String      @map("added_by_id")
+  addedByRole    AddedByRole @map("added_by_role")
+  address        String
+  price          Decimal?    @db.Decimal(12, 2)
+  beds           Int?
+  baths          Decimal?    @db.Decimal(3, 1)
+  sqft           Int?
+  listingUrl     String?     @map("listing_url")
+  description    String?
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client       Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  addedBy      User           @relation("HomeAddedBy", fields: [addedById], references: [id])
+  notes        HomeNote[]
+  ratings      HomeRating[]
+  favorites    HomeFavorite[]
+
+  @@index([clientId])
+  @@map("homes")
+}
+
+model HomeFavorite {
+  id        String   @id @default(cuid())
+  homeId    String   @map("home_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  home Home @relation(fields: [homeId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([homeId, userId])
+  @@map("home_favorites")
+}
+
+model HomeNote {
+  id         String      @id @default(cuid())
+  homeId     String      @map("home_id")
+  authorId   String      @map("author_id")
+  authorRole AddedByRole @map("author_role")
+  authorName String      @map("author_name")
+  content    String
+  createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
+
+  home   Home @relation(fields: [homeId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id])
+
+  @@index([homeId])
+  @@map("home_notes")
+}
+
+model HomeRating {
+  id        String         @id @default(cuid())
+  homeId    String         @map("home_id")
+  userId    String         @map("user_id")
+  category  RatingCategory
+  score     Int
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
+
+  home Home @relation(fields: [homeId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([homeId, userId, category])
+  @@index([homeId])
+  @@map("home_ratings")
+}
+
+// ─── Listings (realtor inventory) ────────────────────────────────────────────
+
+model Listing {
+  id             String        @id @default(cuid())
+  organizationId String        @map("organization_id")
+  photoUrl       String?       @map("photo_url")
+  address        String
+  city           String
+  state          String
+  zip            String
+  listPrice      Decimal?      @map("list_price") @db.Decimal(12, 2)
+  beds           Int?
+  baths          Decimal?      @db.Decimal(3, 1)
+  sqft           Int?
+  status         ListingStatus @default(DRAFT)
+  description    String?
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status])
+  @@map("listings")
+}
+
+// ─── Transactions ────────────────────────────────────────────────────────────
+
+model Transaction {
+  id             String           @id @default(cuid())
+  organizationId String           @map("organization_id")
+  clientId       String?          @map("client_id")
+  ownerId        String           @map("owner_id")
+  title          String
+  value          Decimal?         @db.Decimal(12, 2)
+  stage          TransactionStage @default(LEAD)
+  notes          String?
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client       Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  owner        User         @relation("TransactionOwner", fields: [ownerId], references: [id])
+
+  @@index([organizationId, stage])
+  @@map("transactions")
+}
+
+// ─── Tasks ───────────────────────────────────────────────────────────────────
+
+model Task {
+  id             String     @id @default(cuid())
+  organizationId String     @map("organization_id")
+  clientId       String?    @map("client_id")
+  assigneeId     String?    @map("assignee_id")
+  title          String
+  taskType       TaskType   @default(OTHER) @map("task_type")
+  dueAt          DateTime?  @map("due_at")
+  status         TaskStatus @default(TODO)
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client       Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  assignee     User?        @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, status])
+  @@index([clientId])
+  @@map("tasks")
+}
+
+// ─── Leads (lightweight) ─────────────────────────────────────────────────────
+
+model Lead {
+  id             String     @id @default(cuid())
+  organizationId String     @map("organization_id")
+  firstName      String     @map("first_name")
+  lastName       String     @map("last_name")
+  email          String?
+  phone          String?
+  status         LeadStatus @default(NEW)
+  notes          String?
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status])
+  @@map("leads")
+}
