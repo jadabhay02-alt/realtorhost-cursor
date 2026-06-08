@@ -8,6 +8,7 @@ import { HomeNotes } from "@/components/homes/home-notes";
 import { HomeRatingsPanel } from "@/components/homes/home-ratings-form";
 import { FavoriteButton } from "@/components/homes/favorite-button";
 import { formatCurrency } from "@/lib/utils/labels";
+import { formatHomeDetails } from "@/lib/utils/format";
 import { getOverallRating } from "@/lib/utils/home-ratings";
 
 export default async function PortalHomePage({
@@ -46,6 +47,9 @@ export default async function PortalHomePage({
       <h1 className="text-xl font-bold">{home.address}</h1>
       <p className="text-lg font-semibold text-primary">
         {formatCurrency(home.price)}
+      </p>
+      <p className="text-sm text-muted-foreground">
+        {formatHomeDetails(home.beds, home.baths, home.sqft)}
       </p>
       {average != null && (
         <p className="font-medium">Overall Rating: {average} / 10</p>

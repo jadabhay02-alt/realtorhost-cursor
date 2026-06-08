@@ -14,16 +14,22 @@ export function titleCase(value?: string | null, fallback = "Unknown"): string {
   return formatEnum(value, fallback);
 }
 
-type DecimalLike =
+/** Prisma Decimal and other numeric DB values safe for JSX display. */
+export type DecimalLike =
   | { toString: () => string; toNumber?: () => number }
   | number
   | string
+  | bigint
   | null
   | undefined;
 
 /** Convert Prisma Decimal / numeric fields to a plain number for display or math. */
 export function toNumber(value: DecimalLike): number | null {
   if (value == null) return null;
+  if (typeof value === "bigint") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
   if (typeof value === "number") return Number.isFinite(value) ? value : null;
   if (typeof value === "string") {
     const parsed = Number(value);
@@ -40,7 +46,7 @@ export function toNumber(value: DecimalLike): number | null {
   return null;
 }
 
-/** Display-safe string for any Prisma Decimal or numeric field. */
+/** Always returns a string — safe to render directly in JSX. */
 export function formatDecimalDisplay(
   value: DecimalLike,
   fallback = "—"
@@ -62,33 +68,36 @@ export function formatBathsDisplay(
 }
 
 export function formatIntDisplay(
-  value: number | null | undefined,
+  value: DecimalLike,
   fallback = "—"
 ): string {
-  if (value == null) return fallback;
-  return String(value);
+  const parsed = toNumber(value);
+  return parsed == null ? fallback : String(Math.trunc(parsed));
 }
 
 export function formatSqftDisplay(
-  value: number | null | undefined,
+  value: DecimalLike,
   fallback = "—"
 ): string {
-  if (value == null) return fallback;
-  return value.toLocaleString();
+  const parsed = toNumber(value);
+  if (parsed == null) return fallback;
+  return Math.trunc(parsed).toLocaleString();
 }
 
+/** e.g. "3 bd · 2.5 ba · 1,850 sqft" — always a string for JSX. */
 export function formatHomeDetails(
-  beds: number | null | undefined,
+  beds: DecimalLike,
   baths: DecimalLike,
-  sqft: number | null | undefined
+  sqft: DecimalLike
 ): string {
   const sqftLabel =
-    sqft != null ? `${formatSqftDisplay(sqft)} sqft` : "—";
+    toNumber(sqft) != null
+      ? `${formatSqftDisplay(sqft)} sqft`
+      : "—";
   return `${formatIntDisplay(beds)} bd · ${formatBathsDisplay(baths)} ba · ${sqftLabel}`;
 }
 
 /** Form input defaultValue from Prisma Decimal fields. */
 export function decimalToInputValue(value: DecimalLike): string {
-  const parsed = toNumber(value);
-  return parsed == null ? "" : String(parsed);
+  return formatDecimalDisplay(value, "");
 }

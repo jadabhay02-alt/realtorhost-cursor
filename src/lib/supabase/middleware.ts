@@ -18,10 +18,6 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
-  const isAuthRoute =
-    pathname.startsWith("/login") ||
-    pathname.startsWith("/signup") ||
-    pathname.startsWith("/auth/callback");
   const isMarketingRoute =
     pathname === "/" || pathname.startsWith("/pricing");
   const isPortalRoute = pathname.startsWith("/portal");
