@@ -60,7 +60,7 @@ export default async function PipelinePage() {
                       >
                         <p className="font-medium">{tx.title}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {formatCurrency(tx.value ? Number(tx.value) : null)}
+                          {formatCurrency(tx.value)}
                         </p>
                         {tx.client && (
                           <p className="mt-1 text-xs text-muted-foreground">

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getListing } from "@/lib/actions/listings";
 import { ListingForm } from "@/components/listings/listing-form";
+import { decimalToInputValue, formatIntDisplay } from "@/lib/utils/format";
 
 export default async function EditListingPage({
   params,
@@ -22,10 +23,10 @@ export default async function EditListingPage({
           city: listing.city,
           state: listing.state,
           zip: listing.zip,
-          listPrice: listing.listPrice?.toString() ?? "",
-          beds: listing.beds?.toString() ?? "",
-          baths: listing.baths?.toString() ?? "",
-          sqft: listing.sqft?.toString() ?? "",
+          listPrice: decimalToInputValue(listing.listPrice),
+          beds: formatIntDisplay(listing.beds, ""),
+          baths: decimalToInputValue(listing.baths),
+          sqft: formatIntDisplay(listing.sqft, ""),
           status: listing.status,
           description: listing.description ?? "",
         }}

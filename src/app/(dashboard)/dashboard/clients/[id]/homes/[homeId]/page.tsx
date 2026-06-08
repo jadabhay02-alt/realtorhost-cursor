@@ -5,9 +5,10 @@ import { getHome } from "@/lib/actions/homes";
 import { requireSession } from "@/lib/auth/session";
 import { HomeNotes } from "@/components/homes/home-notes";
 import { HomeRatingsPanel } from "@/components/homes/home-ratings-form";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils/labels";
+import { formatHomeDetails } from "@/lib/utils/format";
 import { getOverallRating } from "@/lib/utils/home-ratings";
 import { cn } from "@/lib/utils";
 import { FavoriteButton } from "@/components/homes/favorite-button";
@@ -40,11 +41,10 @@ export default async function HomeDetailPage({
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{home.address}</h1>
           <p className="text-xl font-semibold text-primary mt-1">
-            {formatCurrency(home.price ? Number(home.price) : null)}
+            {formatCurrency(home.price)}
           </p>
           <p className="text-muted-foreground mt-2">
-            {home.beds ?? "—"} bd · {home.baths ?? "—"} ba ·{" "}
-            {home.sqft ? `${home.sqft.toLocaleString()} sqft` : "—"}
+            {formatHomeDetails(home.beds, home.baths, home.sqft)}
           </p>
           {average != null && (
             <p className="mt-2 font-medium">

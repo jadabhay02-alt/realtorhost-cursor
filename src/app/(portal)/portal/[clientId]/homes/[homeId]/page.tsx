@@ -45,7 +45,7 @@ export default async function PortalHomePage({
       </Link>
       <h1 className="text-xl font-bold">{home.address}</h1>
       <p className="text-lg font-semibold text-primary">
-        {formatCurrency(home.price ? Number(home.price) : null)}
+        {formatCurrency(home.price)}
       </p>
       {average != null && (
         <p className="font-medium">Overall Rating: {average} / 10</p>

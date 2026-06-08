@@ -4,6 +4,11 @@ import { Heart } from "lucide-react";
 import { getClient } from "@/lib/actions/clients";
 import { requireSession } from "@/lib/auth/session";
 import { formatCurrency } from "@/lib/utils/labels";
+import {
+  formatBathsDisplay,
+  formatIntDisplay,
+  formatSqftDisplay,
+} from "@/lib/utils/format";
 import { getOverallRating } from "@/lib/utils/home-ratings";
 
 export default async function CompareHomesPage({
@@ -55,20 +60,21 @@ export default async function CompareHomesPage({
               {
                 label: "Price",
                 value: (h: (typeof client.homes)[0]) =>
-                  formatCurrency(h.price ? Number(h.price) : null),
+                  formatCurrency(h.price),
               },
               {
                 label: "Beds",
-                value: (h: (typeof client.homes)[0]) => h.beds ?? "—",
+                value: (h: (typeof client.homes)[0]) => formatIntDisplay(h.beds),
               },
               {
                 label: "Baths",
-                value: (h: (typeof client.homes)[0]) => h.baths ?? "—",
+                value: (h: (typeof client.homes)[0]) =>
+                  formatBathsDisplay(h.baths),
               },
               {
                 label: "Sqft",
                 value: (h: (typeof client.homes)[0]) =>
-                  h.sqft?.toLocaleString() ?? "—",
+                  formatSqftDisplay(h.sqft),
               },
               {
                 label: "Favorite",

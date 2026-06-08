@@ -5,6 +5,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, listingStatusLabel } from "@/lib/utils/labels";
+import { formatHomeDetails } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
 
 export default async function ListingsPage() {
@@ -50,13 +51,10 @@ export default async function ListingsPage() {
               </CardHeader>
               <CardContent className="text-sm">
                 <p className="font-semibold text-primary">
-                  {formatCurrency(
-                    listing.listPrice ? Number(listing.listPrice) : null
-                  )}
+                  {formatCurrency(listing.listPrice)}
                 </p>
                 <p className="text-muted-foreground mt-1">
-                  {listing.beds ?? "—"} bd · {listing.baths ?? "—"} ba ·{" "}
-                  {listing.sqft ? `${listing.sqft.toLocaleString()} sqft` : "—"}
+                  {formatHomeDetails(listing.beds, listing.baths, listing.sqft)}
                 </p>
               </CardContent>
             </Card>

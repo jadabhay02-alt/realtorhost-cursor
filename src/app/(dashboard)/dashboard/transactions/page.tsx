@@ -64,7 +64,7 @@ export default async function TransactionsPage() {
             <div>
               <p className="font-medium">{tx.title}</p>
               <p className="text-sm text-muted-foreground">
-                {formatCurrency(tx.value ? Number(tx.value) : null)}
+                {formatCurrency(tx.value)}
                 {tx.client &&
                   ` · ${formatClientName(tx.client.firstName, tx.client.lastName)}`}
               </p>

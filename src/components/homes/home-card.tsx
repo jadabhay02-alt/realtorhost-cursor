@@ -4,6 +4,7 @@ import type { Home, HomeFavorite, HomeRating, User } from "@/generated/prisma/cl
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils/labels";
+import { formatHomeDetails } from "@/lib/utils/format";
 import { getOverallRating } from "@/lib/utils/home-ratings";
 
 type HomeWithRelations = Home & {
@@ -39,14 +40,11 @@ export function HomeCard({
             )}
           </div>
           <p className="text-lg font-bold text-primary">
-            {formatCurrency(home.price ? Number(home.price) : null)}
+            {formatCurrency(home.price)}
           </p>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
-          <p>
-            {home.beds ?? "—"} bd · {home.baths ?? "—"} ba ·{" "}
-            {home.sqft ? `${home.sqft.toLocaleString()} sqft` : "— sqft"}
-          </p>
+          <p>{formatHomeDetails(home.beds, home.baths, home.sqft)}</p>
           <div className="flex items-center gap-2">
             <Star className="h-3.5 w-3.5 text-amber-500" />
             <span className="font-medium text-foreground">

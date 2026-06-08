@@ -6,7 +6,7 @@ import type {
   TransactionStage,
   ListingStatus,
 } from "@/generated/prisma/client";
-import { formatEnum } from "@/lib/utils/format";
+import { formatEnum, toNumber } from "@/lib/utils/format";
 
 const CLIENT_TYPE: Record<string, string> = {
   BUYER: "Buyer",
@@ -48,13 +48,14 @@ export function listingStatusLabel(status?: ListingStatus | string | null): stri
   return formatEnum(status);
 }
 
-export function formatCurrency(value: number | null | undefined): string {
-  if (value == null || Number.isNaN(value)) return "—";
+export function formatCurrency(value: unknown): string {
+  const amount = toNumber(value as Parameters<typeof toNumber>[0]);
+  if (amount == null || Number.isNaN(amount)) return "—";
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
-  }).format(value);
+  }).format(amount);
 }
 
 export function formatClientName(
