@@ -2,6 +2,10 @@
 
 Client collaboration platform for real estate agents — Lovable-style UI with shared Home Workspace.
 
+**Project folder (only path to use):** `C:\Users\jadab\Projects\realtor-host`
+
+> Previously named *Keyvora*. That name is retired. If Cursor still mentions `keyvora`, use **File → Open Folder** and pick `realtor-host`, or double-click `Open-Realtor-Host.bat` in this folder.
+
 ## Run locally
 
 ```powershell
